@@ -1,9 +1,11 @@
 import java.io.*;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 
 /**
- * Spelling Bee
+ * Spelling Bee by Sohum Berry
  *
  * This program accepts an input of letters. It prints to an output file
  * all English words that can be generated from those letters.
@@ -34,23 +36,73 @@ public class SpellingBee {
     private ArrayList<String> words;
     public static final int DICTIONARY_SIZE = 143091;
     public static final String[] DICTIONARY = new String[DICTIONARY_SIZE];
+    public ArrayList<Integer> numbers;
 
     public SpellingBee(String letters) {
         this.letters = letters;
+        this.numbers = new ArrayList<>();
         words = new ArrayList<String>();
     }
 
-    // TODO: generate all possible substrings and permutations of the letters.
-    //  Store them all in the ArrayList words. Do this by calling ANOTHER method
-    //  that will find the substrings recursively.
     public void generate() {
-        // YOUR CODE HERE — Call your recursive method!
+        makeWord(letters, "");
     }
 
-    // TODO: Apply mergesort to sort all words. Do this by calling ANOTHER method
-    //  that will find the substrings recursively.
+    // Recursively generating every combination of the given letters
+    public void makeWord(String input, String creation) {
+        for (int i = 0; i < (input.isEmpty() ? 1 : input.length()); i++) {
+            if (!creation.isEmpty())
+                words.add(creation);
+            if (input.isEmpty()) return;
+            makeWord(input.substring(0, i) + input.substring(i+1), creation + input.charAt(i));
+        }
+    }
+
+    // Sorting an ArrayList of Strings
     public void sort() {
-        // YOUR CODE HERE
+        // Copy the words ArrayList to an Array to sort
+        String[] wordArray = new String[words.size()];
+        for (int i = 0; i < words.size(); i++) {
+            wordArray[i] = words.get(i);
+        }
+        wordArray = mergeSort(wordArray, 0, wordArray.length - 1);
+        // Copy the Array back into an ArrayList
+        words = new ArrayList<>(Arrays.asList(wordArray));
+        for (String i : words) {
+            System.out.println(i);
+        }
+    }
+
+    // Break down an array, then rebuild it to sort it
+    public String[] mergeSort(String[] array, int start, int end) {
+        if (start >= end) {
+            return new String[] {array[start]};
+        }
+        int mid = (start+end)/2;
+
+        String[] arr1 = mergeSort(array, start, mid);
+        String[] arr2 = mergeSort(array, mid+1, end);
+        return merge(arr1, arr2);
+    }
+
+    // Merge two arrays into one sorted array of Strings
+    public String[] merge(String[] arr1, String[] arr2) {
+        int i = 0, j = 0;
+        String[] out = new String[arr1.length+arr2.length];
+        while (i < arr1.length && j < arr2.length) {
+            if (arr1[i].compareTo(arr2[j]) < 0) {
+                out[i+j] = arr1[i++];
+            } else {
+                out[i+j] = arr2[j++];
+            }
+        }
+        while (i < arr1.length) {
+            out[i+j] = arr1[i++];
+        }
+        while (j < arr2.length) {
+            out[j+i] = arr2[j++];
+        }
+        return out;
     }
 
     // Removes duplicates from the sorted list.
@@ -65,10 +117,35 @@ public class SpellingBee {
         }
     }
 
-    // TODO: For each word in words, use binary search to see if it is in the dictionary.
-    //  If it is not in the dictionary, remove it from words.
+    // Removes words that aren't found in the Dictionary
     public void checkWords() {
-        // YOUR CODE HERE
+        for (int i = 0; i < words.size(); i++) {
+            String word = words.get(i);
+            if (!found(word)) {
+                words.remove(i--);
+            }
+        }
+    }
+
+    // Proxy function for Binary Search
+    public boolean found(String word) {
+        return found(word, 0, DICTIONARY_SIZE);
+    }
+
+    // Binary Search
+    public boolean found(String word, int start, int end) {
+        if (start >= end) {
+            return false;
+        }
+        int mid = (start + end) / 2;
+
+        if (word.compareTo(DICTIONARY[mid]) == 0) {
+            return true;
+        }
+        if (word.compareTo(DICTIONARY[mid]) < 0) {
+            return found(word, start, mid);
+        }
+        return found(word, mid+1, end);
     }
 
     // Prints all valid words to wordList.txt
@@ -127,6 +204,7 @@ public class SpellingBee {
         SpellingBee sb = new SpellingBee(letters);
         sb.generate();
         sb.sort();
+//        sb.bubbleSort();
         sb.removeDuplicates();
         sb.checkWords();
         try {
